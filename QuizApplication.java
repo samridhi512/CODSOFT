@@ -2,35 +2,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+
+class Question {
+    String question;
+    String[] options;
+    int correctAnswer;
+
+    public Question(String question, String[] options, int correctAnswer) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswer = correctAnswer;
+    }
+}
 
 public class QuizApplication extends JFrame implements ActionListener {
-    private String[] questions = {
-        "What is the capital of France?",
-        "Which programming language is used for Android development?",
-        "What does JVM stand for?",
-        "Who developed the Python programming language?",
-        "What is the largest planet in our solar system?",
-        "Which data structure follows the FIFO principle?",
-        "Who invented the World Wide Web?",
-        "Which is the fastest land animal?",
-        "What does HTML stand for?",
-        "Which is the longest river in the world?"
-    };
-
-    private String[][] options = {
-        {"Paris", "London", "Berlin", "Rome"},
-        {"Java", "Python", "C++", "Swift"},
-        {"Java Virtual Machine", "Java Visual Manager", "Just Virtual Memory", "None of the above"},
-        {"Guido van Rossum", "Dennis Ritchie", "Bjarne Stroustrup", "James Gosling"},
-        {"Jupiter", "Saturn", "Mars", "Earth"},
-        {"Stack", "Queue", "Array", "Graph"},
-        {"Tim Berners-Lee", "Bill Gates", "Steve Jobs", "Linus Torvalds"},
-        {"Cheetah", "Tiger", "Lion", "Leopard"},
-        {"Hyper Text Markup Language", "High Transfer Machine Learning", "Hyper Tool Multi Language", "None of the above"},
-        {"Nile", "Amazon", "Yangtze", "Mississippi"}
-    };
-
-    private int[] answers = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0}; 
+    private ArrayList<Question> questions;
     private int index = 0, score = 0, timeLeft = 10;
 
     private JLabel questionLabel, timerLabel;
@@ -44,6 +32,9 @@ public class QuizApplication extends JFrame implements ActionListener {
         setSize(600, 350);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        
+        questions = loadQuestions();
 
         questionLabel = new JLabel();
         timerLabel = new JLabel("Time Left: " + timeLeft + "s", SwingConstants.RIGHT);
@@ -67,50 +58,91 @@ public class QuizApplication extends JFrame implements ActionListener {
         nextButton.addActionListener(this);
         add(nextButton, BorderLayout.SOUTH);
 
-        
-        timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                timeLeft--;
-                timerLabel.setText("Time Left: " + timeLeft + "s");
-                if (timeLeft == 0) {
-                    timer.stop();
-                    checkAnswer();
-                }
+        timer = new Timer(1000, e -> {
+            timeLeft--;
+            timerLabel.setText("Time Left: " + timeLeft + "s");
+            if (timeLeft == 0) {
+                timer.stop();
+                checkAnswer();
             }
         });
 
         loadQuestion();
         timer.start();
-
         setVisible(true);
     }
 
     private void loadQuestion() {
-        if (index < questions.length) {
-            questionLabel.setText("Q" + (index + 1) + ": " + questions[index]);
+        if (index < questions.size()) {
+            Question q = questions.get(index);
+            questionLabel.setText("Q" + (index + 1) + ": " + q.question);
             for (int i = 0; i < 4; i++) {
-                radioButtons[i].setText(options[index][i]);
+                radioButtons[i].setText(q.options[i]);
             }
             group.clearSelection();
-            timeLeft = 10; 
-            if (timer != null) {
-                timer.restart();
-            }
+            timeLeft = 10;
+            timer.restart();
         } else {
-            JOptionPane.showMessageDialog(this, "Quiz Over! Your Score: " + score + "/" + questions.length);
+            saveScore();
+            JOptionPane.showMessageDialog(this, "Quiz Over! Your Score: " + score + "/" + questions.size());
             System.exit(0);
         }
     }
 
     private void checkAnswer() {
+        Question q = questions.get(index);
         for (int i = 0; i < 4; i++) {
-            if (radioButtons[i].isSelected() && i == answers[index]) {
+            if (radioButtons[i].isSelected() && i == q.correctAnswer) {
                 score++;
             }
         }
         index++;
         loadQuestion();
+    }
+
+    private void saveScore() {
+        try (FileWriter writer = new FileWriter("quiz_scores.txt", true)) {
+            writer.write("Score: " + score + "/" + questions.size() + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private ArrayList<Question> loadQuestions() {
+        ArrayList<Question> list = new ArrayList<>();
+        list.add(new Question("What is the capital of France?",
+                new String[] { "Paris", "London", "Berlin", "Rome" }, 0)); 
+        list.add(new Question("Which programming language is used for Android development?",
+                new String[] { "Java", "Python", "C++", "Swift" }, 0));
+        list.add(new Question("What does JVM stand for?",
+                new String[] { "Java Virtual Machine", "Java Visual Manager", "Just Virtual Memory",
+                        "None of the above" },
+                0)); 
+        list.add(new Question("Who developed Python?",
+                new String[] { "Guido van Rossum", "Dennis Ritchie", "Bjarne Stroustrup", "James Gosling" }, 0)); 
+                                                                                                                  
+                                                                                                                  
+                                                                                                                  
+        list.add(new Question("What is the largest planet in our solar system?",
+                new String[] { "Jupiter", "Saturn", "Mars", "Earth" }, 0)); 
+        list.add(new Question("What does HTML stand for?",
+                new String[] { "Hyper Text Markup Language", "Hyper Transfer Markup Language",
+                        "Hyper Text Machine Learning", "Hyper Transfer Main Logic" },
+                0)); 
+        list.add(new Question("Which company developed the C programming language?",
+                new String[] { "Bell Labs", "Microsoft", "IBM", "Google" }, 0)); 
+        list.add(new Question("What is the speed of light?",
+                new String[] { "299,792,458 m/s", "150,000,000 m/s", "3,000,000 m/s", "30,000,000 m/s" }, 0)); 
+                                                                                                               
+                                                                                                             
+        list.add(new Question("Who is known as the father of computers?",
+                new String[] { "Charles Babbage", "Alan Turing", "John von Neumann", "Tim Berners-Lee" }, 0)); 
+                                                                                                               
+                                                                                                               
+        list.add(new Question("Which of the following is NOT an operating system?",
+                new String[] { "Windows", "Linux", "Python", "macOS" }, 2)); 
+
+        return list;
     }
 
     @Override
