@@ -1,129 +1,125 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-class QuizQuestion {
-    private String question;
-    private List<String> options;
-    int correctOptionIndex;
+public class QuizApplication extends JFrame implements ActionListener {
+    private String[] questions = {
+        "What is the capital of France?",
+        "Which programming language is used for Android development?",
+        "What does JVM stand for?",
+        "Who developed the Python programming language?",
+        "What is the largest planet in our solar system?",
+        "Which data structure follows the FIFO principle?",
+        "Who invented the World Wide Web?",
+        "Which is the fastest land animal?",
+        "What does HTML stand for?",
+        "Which is the longest river in the world?"
+    };
 
-    public QuizQuestion(String question, List<String> options, int correctOptionIndex) {
-        this.question = question;
-        this.options = options;
-        this.correctOptionIndex = correctOptionIndex;
-    }
+    private String[][] options = {
+        {"Paris", "London", "Berlin", "Rome"},
+        {"Java", "Python", "C++", "Swift"},
+        {"Java Virtual Machine", "Java Visual Manager", "Just Virtual Memory", "None of the above"},
+        {"Guido van Rossum", "Dennis Ritchie", "Bjarne Stroustrup", "James Gosling"},
+        {"Jupiter", "Saturn", "Mars", "Earth"},
+        {"Stack", "Queue", "Array", "Graph"},
+        {"Tim Berners-Lee", "Bill Gates", "Steve Jobs", "Linus Torvalds"},
+        {"Cheetah", "Tiger", "Lion", "Leopard"},
+        {"Hyper Text Markup Language", "High Transfer Machine Learning", "Hyper Tool Multi Language", "None of the above"},
+        {"Nile", "Amazon", "Yangtze", "Mississippi"}
+    };
 
-    public String getQuestion() {
-        return question;
-    }
+    private int[] answers = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0}; 
+    private int index = 0, score = 0, timeLeft = 10;
 
-    public List<String> getOptions() {
-        return options;
-    }
-
-    public boolean isCorrect(int optionIndex) {
-        return optionIndex == correctOptionIndex;
-    }
-}
-
-public class QuizApplication {
-    private List<QuizQuestion> quizQuestions;
-    private int currentQuestionIndex;
-    private int score;
+    private JLabel questionLabel, timerLabel;
+    private JRadioButton[] radioButtons;
+    private ButtonGroup group;
+    private JButton nextButton;
     private Timer timer;
 
     public QuizApplication() {
-        initializeQuiz();
-    }
+        setTitle("Quiz Application with Timer");
+        setSize(600, 350);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-    private void initializeQuiz() {
-        quizQuestions = new ArrayList<>();
+        questionLabel = new JLabel();
+        timerLabel = new JLabel("Time Left: " + timeLeft + "s", SwingConstants.RIGHT);
 
-        quizQuestions.add(new QuizQuestion("Who is known as the 'Master Blaster' in Indian cricket?",
-                List.of("Virat Kohli", "Sachin Tendulkar", "MS Dhoni", "Rohit Sharma"), 1));
-        quizQuestions.add(new QuizQuestion("Who is the captain of the Indian women's cricket team?",
-                List.of("Mithali Raj", "Smriti Mandhana", "Harmanpreet Kaur", "Jhulan Goswami"), 0));
-        quizQuestions.add(new QuizQuestion("Which actress won the National Film Award for Best Actress in 2021?",
-                List.of("Kangana Ranaut", "Alia Bhatt", "Vidya Balan", "Deepika Padukone"), 0));
-        quizQuestions.add(new QuizQuestion("Who is the highest run-scorer in IPL history?",
-                List.of("Virat Kohli", "Suresh Raina", "Rohit Sharma", "David Warner"), 2));
-        quizQuestions.add(new QuizQuestion("Who won the Filmfare Award for Best Actor in 2021?",
-                List.of("Ranbir Kapoor", "Akshay Kumar", "Rajkummar Rao", "Ayushmann Khurrana"), 1));
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(questionLabel, BorderLayout.WEST);
+        topPanel.add(timerLabel, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
 
-        quizQuestions.add(new QuizQuestion("Who was the leading wicket-taker in ICC T20 World Cup 2021?",
-                List.of("Jasprit Bumrah", "Rashid Khan", "Adam Zampa", "Josh Hazlewood"), 1));
-        quizQuestions.add(new QuizQuestion("Which team won the ICC Test Championship in 2021?",
-                List.of("India", "New Zealand", "Australia", "England"), 1));
-        quizQuestions.add(new QuizQuestion("Who scored the fastest century in IPL history?",
-                List.of("Chris Gayle", "David Warner", "AB de Villiers", "KL Rahul"), 0));
-        quizQuestions.add(new QuizQuestion("Who won the ICC Men's ODI Cricketer of the Year award in 2021?",
-                List.of("Virat Kohli", "Babar Azam", "Rohit Sharma", "Josh Butler"), 1));
-        quizQuestions.add(new QuizQuestion("Which Indian cricketer holds the record for most sixes in IPL history?",
-                List.of("MS Dhoni", "Virat Kohli", "Rohit Sharma", "Chris Gayle"), 2));
-
-        currentQuestionIndex = 0;
-        score = 0;
-    }
-
-    public void startQuiz() {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Welcome to the Quiz! You will have 10 seconds to answer each question.");
-        System.out.println("-------------------------------------------------------------");
-
-        for (QuizQuestion question : quizQuestions) {
-            displayQuestion(question);
-            startTimer(20);
-
-            int selectedOption = scanner.nextInt();
-            timer.cancel();
-
-            if (question.isCorrect(selectedOption - 1)) {
-                System.out.println("Correct!");
-                score++;
-            } else {
-                System.out.println(
-                        "Incorrect! The correct answer was: " + question.getOptions().get(question.correctOptionIndex));
-            }
-
-            System.out.println("-------------------------------------------------------------");
-            currentQuestionIndex++;
+        JPanel optionsPanel = new JPanel(new GridLayout(4, 1));
+        radioButtons = new JRadioButton[4];
+        group = new ButtonGroup();
+        for (int i = 0; i < 4; i++) {
+            radioButtons[i] = new JRadioButton();
+            group.add(radioButtons[i]);
+            optionsPanel.add(radioButtons[i]);
         }
+        add(optionsPanel, BorderLayout.CENTER);
 
-        displayResult();
-        scanner.close();
-    }
+        nextButton = new JButton("Next");
+        nextButton.addActionListener(this);
+        add(nextButton, BorderLayout.SOUTH);
 
-    private void displayQuestion(QuizQuestion question) {
-        System.out.println("Question " + (currentQuestionIndex + 1) + ": " + question.getQuestion());
-        List<String> options = question.getOptions();
-        for (int i = 0; i < options.size(); i++) {
-            System.out.println((i + 1) + ". " + options.get(i));
-        }
-        System.out.print("Your answer (1-" + options.size() + "): ");
-    }
-
-    private void startTimer(int seconds) {
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
+        
+        timer = new Timer(1000, new ActionListener() {
             @Override
-            public void run() {
-                System.out.println("\nTime's up!");
-                System.exit(0);
+            public void actionPerformed(ActionEvent e) {
+                timeLeft--;
+                timerLabel.setText("Time Left: " + timeLeft + "s");
+                if (timeLeft == 0) {
+                    timer.stop();
+                    checkAnswer();
+                }
             }
-        }, seconds * 1000);
+        });
+
+        loadQuestion();
+        timer.start();
+
+        setVisible(true);
     }
 
-    private void displayResult() {
-        System.out.println("Quiz Ended!");
-        System.out.println("Your Score: " + score + "/" + quizQuestions.size());
-        System.out.println("-------------------------------------------------------------");
+    private void loadQuestion() {
+        if (index < questions.length) {
+            questionLabel.setText("Q" + (index + 1) + ": " + questions[index]);
+            for (int i = 0; i < 4; i++) {
+                radioButtons[i].setText(options[index][i]);
+            }
+            group.clearSelection();
+            timeLeft = 10; 
+            if (timer != null) {
+                timer.restart();
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Quiz Over! Your Score: " + score + "/" + questions.length);
+            System.exit(0);
+        }
+    }
+
+    private void checkAnswer() {
+        for (int i = 0; i < 4; i++) {
+            if (radioButtons[i].isSelected() && i == answers[index]) {
+                score++;
+            }
+        }
+        index++;
+        loadQuestion();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        timer.stop();
+        checkAnswer();
     }
 
     public static void main(String[] args) {
-        QuizApplication quizApp = new QuizApplication();
-        quizApp.startQuiz();
+        new QuizApplication();
     }
 }
